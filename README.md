@@ -43,9 +43,9 @@ Mounts:
 
 | Host | Container | Notes |
 |---|---|---|
-| workspace | `/workspace` | read/write |
-| pi home | `/root/.pi/agent` | auth/config/packages/sessions |
-| context home | `/root/docs` | read-only; omitted by default |
+| workspace | same absolute path as host | read/write |
+| pi home | `/home/pi/.pi/agent` | auth/config/packages/sessions |
+| context home | `/home/pi/docs` | read-only; omitted by default |
 
 ## Config
 
@@ -131,7 +131,7 @@ It also removes old package versions, keeping the latest 3.
 The launcher mounts pi home into the container:
 
 ```text
-~/.pi/agent -> /root/.pi/agent
+~/.pi/agent -> /home/pi/.pi/agent
 ```
 
 That means your host pi auth, config, extensions, packages, and sessions are available in the container. If you use a named Docker volume for `--pi-home`, that volume controls what pi packages/extensions are available.

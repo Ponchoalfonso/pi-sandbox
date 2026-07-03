@@ -18,7 +18,7 @@ BUILTIN_PI_HOME = "~/.pi/agent"
 SCAFFOLD_CONTEXT_HOME = "~/docs"
 CONFIG_HOME = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")).expanduser()
 CONFIG_PATH = CONFIG_HOME / "pi-sandbox.toml"
-CONTAINER_HOME = "/root"
+CONTAINER_HOME = "/home/pi"
 
 VOLUME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 CONFIG_KEYS = {"pull", "image", "pi-home", "pi_home", "context-home", "context_home"}
@@ -199,7 +199,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--workspace",
         default=None,
-        help="Host workspace mounted at /workspace. Defaults to $PI_SANDBOX_WORKSPACE or current directory.",
+        help="Host workspace mounted at the same absolute path in the container. Defaults to $PI_SANDBOX_WORKSPACE or current directory.",
     )
     parser.add_argument(
         "--pi-home",
@@ -279,8 +279,16 @@ def main(argv: list[str]) -> int:
         "run",
         "--rm",
         *tty_args,
+        "--user",
+        f"{os.getuid()}:{os.getgid()}",
+        "-e",
+        f"HOME={CONTAINER_HOME}",
+        "-e",
+        "TERM=xterm-256color",
+        "-e",
+        "COLORTERM=truecolor",
         "-v",
-        f"{workspace}:/workspace",
+        f"{workspace}:{workspace}",
         "-v",
         f"{pi_home}:{CONTAINER_HOME}/.pi/agent",
     ]
@@ -288,7 +296,7 @@ def main(argv: list[str]) -> int:
         command += ["-v", f"{context_home}:{CONTAINER_HOME}/docs:ro"]
     command += [
         "-w",
-        "/workspace",
+        workspace,
         image,
         *pi_args,
     ]
