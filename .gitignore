@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# Local/editor
+.env
+.env.*
+!.env.example
+.DS_Store
+.idea/
+.vscode/
+
+# Pi/local artifacts
+.pi/
+.agents/
+.pi-subagents/
+
+# Docker/local build artifacts
+*.tar
