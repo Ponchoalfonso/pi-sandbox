@@ -3,6 +3,8 @@ name: Publish Docker image
 on:
   push:
     branches: ["main"]
+    paths:
+      - "Dockerfile"
   schedule:
     # Poll daily for new upstream pi releases.
     - cron: "0 6 * * *"

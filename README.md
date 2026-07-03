@@ -36,6 +36,7 @@ scripts/pi-sandbox.py --workspace ~/src/project
 scripts/pi-sandbox.py --pi-home ~/.pi/agent
 scripts/pi-sandbox.py --pi-home volume:pi-agent-volume
 scripts/pi-sandbox.py --context-home ~/docs
+scripts/pi-sandbox.py --gh-config ~/.config/gh
 scripts/pi-sandbox.py --prune
 ```
 
@@ -45,6 +46,7 @@ Mounts:
 |---|---|---|
 | workspace | same absolute path as host | read/write |
 | pi home | `/home/pi/.pi/agent` | auth/config/packages/sessions |
+| GitHub CLI config | `/home/pi/.config/gh` | read-only; omitted by default |
 | context home | `/home/pi/docs` | read-only; omitted by default |
 
 ## Config
@@ -74,6 +76,7 @@ image = "ghcr.io/ponchoalfonso/pi-sandbox:latest"
 pull = true
 pi-home = "~/.pi/agent"
 context-home = "~/docs"
+gh-config = "~/.config/gh"
 ```
 
 Precedence:
@@ -91,6 +94,7 @@ PI_SANDBOX_PULL
 PI_SANDBOX_WORKSPACE
 PI_SANDBOX_PI_HOME
 PI_SANDBOX_CONTEXT_HOME
+PI_SANDBOX_GH_CONFIG
 ```
 
 ## Pulling and pruning
@@ -135,3 +139,5 @@ The launcher mounts pi home into the container:
 ```
 
 That means your host pi auth, config, extensions, packages, and sessions are available in the container. If you use a named Docker volume for `--pi-home`, that volume controls what pi packages/extensions are available.
+
+Set `--gh-config`, `PI_SANDBOX_GH_CONFIG`, or `gh-config` in config to mount your host GitHub CLI config read-only and set `GH_CONFIG_DIR=/home/pi/.config/gh`, so the sandbox can reuse your host GitHub CLI session. The scaffolded config points this at your XDG config home's `gh` directory.
