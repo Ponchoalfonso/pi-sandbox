@@ -9,10 +9,6 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends bash ca-certificates git ripgrep \
   && rm -rf /var/lib/apt/lists/*
 RUN npm install -g --ignore-scripts @earendil-works/pi-coding-agent
-RUN pi install npm:pi-subagents
-RUN pi install npm:pi-intercom
-RUN pi install npm:pi-vim
-RUN pi install npm:pi-web-access
 
 WORKDIR /workspace
 ENTRYPOINT ["pi"]
