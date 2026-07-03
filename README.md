@@ -45,9 +45,14 @@ Mounts:
 | Host | Container | Notes |
 |---|---|---|
 | workspace | same absolute path as host | read/write |
-| pi home | `/home/pi/.pi/agent` | auth/config/packages/sessions |
-| GitHub CLI config | `/home/pi/.config/gh` | read-only; omitted by default |
-| context home | `/home/pi/docs` | read-only; omitted by default |
+| pi home | `$HOME/.pi/agent` | auth/config/packages/sessions |
+| pnpm home | `$HOME/.local/share/pnpm` | tmpfs; pnpm binaries/store; discarded when container exits |
+| GitHub CLI config | `$HOME/.config/gh` | read-only; omitted by default |
+| context home | `$HOME/docs` | read-only; omitted by default |
+
+Inside the container, `HOME` is set to your host home path, so pi shows familiar paths like `~/dev/pi-sandbox`. The launcher also sets `PI_CODING_AGENT_DIR=$HOME/.pi/agent` explicitly.
+
+The launcher mirrors pnpm's usual Linux user-level location inside the container by setting `PNPM_HOME=$HOME/.local/share/pnpm` and `store-dir=$HOME/.local/share/pnpm/store`. That path is mounted as container-only tmpfs, so pnpm does not create project-local `.pnpm-store` directories and the pnpm store is discarded when the container exits.
 
 ## Config
 
@@ -135,9 +140,9 @@ It also removes old package versions, keeping the latest 3.
 The launcher mounts pi home into the container:
 
 ```text
-~/.pi/agent -> /home/pi/.pi/agent
+~/.pi/agent -> $HOME/.pi/agent
 ```
 
 That means your host pi auth, config, extensions, packages, and sessions are available in the container. If you use a named Docker volume for `--pi-home`, that volume controls what pi packages/extensions are available.
 
-Set `--gh-config`, `PI_SANDBOX_GH_CONFIG`, or `gh-config` in config to mount your host GitHub CLI config read-only and set `GH_CONFIG_DIR=/home/pi/.config/gh`, so the sandbox can reuse your host GitHub CLI session. The scaffolded config points this at your XDG config home's `gh` directory.
+Set `--gh-config`, `PI_SANDBOX_GH_CONFIG`, or `gh-config` in config to mount your host GitHub CLI config read-only and set `GH_CONFIG_DIR=$HOME/.config/gh`, so the sandbox can reuse your host GitHub CLI session. The scaffolded config points this at your XDG config home's `gh` directory.

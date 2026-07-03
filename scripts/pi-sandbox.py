@@ -18,9 +18,10 @@ BUILTIN_PI_HOME = "~/.pi/agent"
 SCAFFOLD_CONTEXT_HOME = "~/docs"
 CONFIG_HOME = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")).expanduser()
 CONFIG_PATH = CONFIG_HOME / "pi-sandbox.toml"
-CONTAINER_HOME = "/home/pi"
+CONTAINER_HOME = str(Path.home())
 SCAFFOLD_GH_CONFIG = str(CONFIG_HOME / "gh")
 CONTAINER_GH_CONFIG = f"{CONTAINER_HOME}/.config/gh"
+CONTAINER_PNPM_HOME = f"{CONTAINER_HOME}/.local/share/pnpm"
 
 VOLUME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 CONFIG_KEYS = {
@@ -308,11 +309,19 @@ def main(argv: list[str]) -> int:
         "-e",
         f"HOME={CONTAINER_HOME}",
         "-e",
+        f"PI_CODING_AGENT_DIR={CONTAINER_HOME}/.pi/agent",
+        "-e",
         "TERM=xterm-256color",
         "-e",
         "COLORTERM=truecolor",
+        "-e",
+        f"PNPM_HOME={CONTAINER_PNPM_HOME}",
+        "-e",
+        f"npm_config_store_dir={CONTAINER_PNPM_HOME}/store",
         "-v",
         f"{workspace}:{workspace}",
+        "--tmpfs",
+        f"{CONTAINER_PNPM_HOME}:rw,uid={os.getuid()},gid={os.getgid()},mode=700",
         "-v",
         f"{pi_home}:{CONTAINER_HOME}/.pi/agent",
     ]

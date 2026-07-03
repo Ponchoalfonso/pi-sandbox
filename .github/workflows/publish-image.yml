@@ -49,8 +49,28 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Decide whether to build
+        id: build-check
+        run: |
+          image="${REGISTRY}/${IMAGE_NAME}:${{ steps.upstream.outputs.tag }}"
+
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "Building because this workflow was triggered by ${{ github.event_name }}."
+            exit 0
+          fi
+
+          if docker manifest inspect "$image" >/dev/null 2>&1; then
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping build: upstream release ${{ steps.upstream.outputs.tag }} already exists at $image."
+          else
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "Building: detected new upstream release ${{ steps.upstream.outputs.tag }}."
+          fi
+
       - name: Extract metadata for Docker
         id: meta
+        if: steps.build-check.outputs.should_build == 'true'
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
@@ -63,6 +83,7 @@ jobs:
 
       - name: Build and push Docker image
         id: push
+        if: steps.build-check.outputs.should_build == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -72,6 +93,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Generate artifact attestation
+        if: steps.build-check.outputs.should_build == 'true'
         uses: actions/attest@v4
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
@@ -79,6 +101,7 @@ jobs:
           push-to-registry: true
 
       - name: Delete old package versions
+        if: steps.build-check.outputs.should_build == 'true'
         uses: actions/delete-package-versions@v5
         with:
           package-name: ${{ github.event.repository.name }}
