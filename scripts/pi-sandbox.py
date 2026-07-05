@@ -318,10 +318,12 @@ def main(argv: list[str]) -> int:
         f"PNPM_HOME={CONTAINER_PNPM_HOME}",
         "-e",
         f"npm_config_store_dir={CONTAINER_PNPM_HOME}/store",
+        "-e",
+        f"pnpm_config_store_dir={CONTAINER_PNPM_HOME}/store",
         "-v",
         f"{workspace}:{workspace}",
         "--tmpfs",
-        f"{CONTAINER_PNPM_HOME}:rw,uid={os.getuid()},gid={os.getgid()},mode=700",
+        f"{CONTAINER_PNPM_HOME}:rw,exec,uid={os.getuid()},gid={os.getgid()},mode=700",
         "-v",
         f"{pi_home}:{CONTAINER_HOME}/.pi/agent",
     ]

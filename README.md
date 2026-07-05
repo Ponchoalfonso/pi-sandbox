@@ -46,13 +46,13 @@ Mounts:
 |---|---|---|
 | workspace | same absolute path as host | read/write |
 | pi home | `$HOME/.pi/agent` | auth/config/packages/sessions |
-| pnpm home | `$HOME/.local/share/pnpm` | tmpfs; pnpm binaries/store; discarded when container exits |
+| pnpm home | `$HOME/.local/share/pnpm` | tmpfs with `exec`; pnpm binaries/store; discarded when container exits |
 | GitHub CLI config | `$HOME/.config/gh` | read-only; omitted by default |
 | context home | `$HOME/docs` | read-only; omitted by default |
 
 Inside the container, `HOME` is set to your host home path, so pi shows familiar paths like `~/dev/pi-sandbox`. The launcher also sets `PI_CODING_AGENT_DIR=$HOME/.pi/agent` explicitly.
 
-The launcher mirrors pnpm's usual Linux user-level location inside the container by setting `PNPM_HOME=$HOME/.local/share/pnpm` and `store-dir=$HOME/.local/share/pnpm/store`. That path is mounted as container-only tmpfs, so pnpm does not create project-local `.pnpm-store` directories and the pnpm store is discarded when the container exits.
+The launcher mirrors pnpm's usual Linux user-level location inside the container by setting `PNPM_HOME=$HOME/.local/share/pnpm` and configuring `store-dir=$HOME/.local/share/pnpm/store` via both `npm_config_store_dir` and `pnpm_config_store_dir`. That path is mounted as container-only tmpfs with `exec`, so pnpm can run its shims there without creating project-local `.pnpm-store` directories, and the pnpm store is discarded when the container exits.
 
 ## Config
 
