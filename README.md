@@ -124,7 +124,7 @@ networks = ["myproject_default"]
 
 A singular `network = "myproject_default"` is also accepted. Environment variables are supported as either `PI_SANDBOX_NETWORK=myproject_default` or comma-separated `PI_SANDBOX_NETWORKS=net1,net2`.
 
-Use `--network none`, `PI_SANDBOX_NETWORKS=none`, or `networks = []` to disable configured networks. Attaching to an internal or restricted Docker network may affect outbound internet access; normal Compose bridge networks usually keep internet access working.
+Use `--network none`, `PI_SANDBOX_NETWORKS=none`, or `networks = []` to disable configured networks. Before running, the launcher checks configured networks with `docker network inspect`; unavailable networks are skipped with a warning. Attaching to an internal or restricted Docker network may affect outbound internet access; normal Compose bridge networks usually keep internet access working.
 
 ## Pulling and pruning
 

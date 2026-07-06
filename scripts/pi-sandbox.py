@@ -295,6 +295,27 @@ def run_checked(command: list[str]) -> bool:
     return subprocess.run(command).returncode == 0
 
 
+def docker_network_exists(network: str) -> bool:
+    return (
+        subprocess.run(
+            ["docker", "network", "inspect", network],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ).returncode
+        == 0
+    )
+
+
+def filter_existing_networks(networks: list[str]) -> list[str]:
+    existing_networks = []
+    for network in networks:
+        if docker_network_exists(network):
+            existing_networks.append(network)
+        else:
+            print(f"warning: skipping unavailable Docker network: {network}", file=sys.stderr)
+    return existing_networks
+
+
 def main(argv: list[str]) -> int:
     parser = build_parser()
     own_argv, pi_argv_after_separator = split_args(argv)
@@ -324,6 +345,7 @@ def main(argv: list[str]) -> int:
     pi_home = pi_home_mount_source(pi_home_value)
     context_home = mkdir_abs(context_home_value) if context_home_value is not None else None
     gh_config = mkdir_abs(gh_config_value) if gh_config_value is not None else None
+    networks = filter_existing_networks(networks)
 
     if pull:
         if not run_checked(["docker", "pull", image]):
