@@ -6,7 +6,7 @@ LABEL org.opencontainers.image.title="pi-sandbox" \
       dev.pi-sandbox.prunable="true"
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends bash ca-certificates fd-find git python3 ripgrep wget \
+  && apt-get install -y --no-install-recommends bash ca-certificates fd-find git postgresql-client python3 ripgrep wget \
   && ln -sf /usr/bin/fdfind /usr/local/bin/fd \
   && mkdir -p -m 755 /etc/apt/keyrings \
   && wget -nv -O /etc/apt/keyrings/githubcli-archive-keyring.gpg https://cli.github.com/packages/githubcli-archive-keyring.gpg \

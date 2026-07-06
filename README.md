@@ -37,6 +37,8 @@ scripts/pi-sandbox.py --pi-home ~/.pi/agent
 scripts/pi-sandbox.py --pi-home volume:pi-agent-volume
 scripts/pi-sandbox.py --context-home ~/docs
 scripts/pi-sandbox.py --gh-config ~/.config/gh
+scripts/pi-sandbox.py --network myproject_default
+scripts/pi-sandbox.py --network net1 --network net2
 scripts/pi-sandbox.py --prune
 ```
 
@@ -82,6 +84,7 @@ pull = true
 pi-home = "~/.pi/agent"
 context-home = "~/docs"
 gh-config = "~/.config/gh"
+networks = ["myproject_default"]
 ```
 
 Precedence:
@@ -100,7 +103,28 @@ PI_SANDBOX_WORKSPACE
 PI_SANDBOX_PI_HOME
 PI_SANDBOX_CONTEXT_HOME
 PI_SANDBOX_GH_CONFIG
+PI_SANDBOX_NETWORK
+PI_SANDBOX_NETWORKS
 ```
+
+## Docker networks
+
+By default the sandbox uses Docker's default networking behavior. To attach the container to one or more existing Docker networks, use repeatable `--network` flags:
+
+```bash
+scripts/pi-sandbox.py --network myproject_default
+scripts/pi-sandbox.py --network net1 --network net2
+```
+
+Or configure them in TOML:
+
+```toml
+networks = ["myproject_default"]
+```
+
+A singular `network = "myproject_default"` is also accepted. Environment variables are supported as either `PI_SANDBOX_NETWORK=myproject_default` or comma-separated `PI_SANDBOX_NETWORKS=net1,net2`.
+
+Use `--network none`, `PI_SANDBOX_NETWORKS=none`, or `networks = []` to disable configured networks. Attaching to an internal or restricted Docker network may affect outbound internet access; normal Compose bridge networks usually keep internet access working.
 
 ## Pulling and pruning
 

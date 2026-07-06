@@ -33,6 +33,8 @@ CONFIG_KEYS = {
     "context_home",
     "gh-config",
     "gh_config",
+    "network",
+    "networks",
 }
 PRUNE_LABEL = "dev.pi-sandbox.prunable=true"
 
@@ -111,10 +113,12 @@ def split_args(argv: list[str]) -> tuple[list[str], list[str]]:
     return argv[:index], argv[index + 1 :]
 
 
+def is_disabled(value: Any) -> bool:
+    return isinstance(value, str) and value.strip().lower() in {"", "none", "null", "false", "off"}
+
+
 def none_if_disabled(value: Any) -> str | None:
-    if value is None:
-        return None
-    if isinstance(value, str) and value.strip().lower() in {"", "none", "null", "false", "off"}:
+    if value is None or is_disabled(value):
         return None
     return str(value)
 
@@ -160,6 +164,36 @@ def resolve_pull(flag_value: bool | None, config: dict[str, Any]) -> bool:
     return parse_bool(str(value))
 
 
+def parse_networks(value: Any) -> list[str]:
+    if value is None or is_disabled(value):
+        return []
+    if isinstance(value, str):
+        networks = [network.strip() for network in value.split(",")]
+    elif isinstance(value, list):
+        networks = [str(network).strip() for network in value]
+    else:
+        raise SystemExit("error: networks must be a string or TOML array")
+
+    networks = [network for network in networks if network]
+    if any(is_disabled(network) for network in networks):
+        return []
+    return networks
+
+
+def resolve_networks(flag_values: list[str] | None, config: dict[str, Any]) -> list[str]:
+    if flag_values is not None:
+        return parse_networks(flag_values)
+    if "PI_SANDBOX_NETWORKS" in os.environ:
+        return parse_networks(os.environ["PI_SANDBOX_NETWORKS"])
+    if "PI_SANDBOX_NETWORK" in os.environ:
+        return parse_networks(os.environ["PI_SANDBOX_NETWORK"])
+
+    networks = config_get(config, "networks")
+    if networks is not None:
+        return parse_networks(networks)
+    return parse_networks(config_get(config, "network"))
+
+
 def scaffold_config() -> int:
     if CONFIG_PATH.exists():
         print(f"error: config already exists: {CONFIG_PATH}", file=sys.stderr)
@@ -172,7 +206,8 @@ def scaffold_config() -> int:
         "pull = true\n"
         f'pi-home = "{BUILTIN_PI_HOME}"\n'
         f'context-home = "{SCAFFOLD_CONTEXT_HOME}"\n'
-        f'gh-config = "{SCAFFOLD_GH_CONFIG}"\n',
+        f'gh-config = "{SCAFFOLD_GH_CONFIG}"\n'
+        '# networks = ["myproject_default"]\n',
         encoding="utf-8",
     )
     print(f"created {CONFIG_PATH}")
@@ -240,6 +275,15 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--network",
+        action="append",
+        default=None,
+        help=(
+            "Docker network to attach to. May be repeated. "
+            "Unset by default; use 'none' to disable env/config networks."
+        ),
+    )
+    parser.add_argument(
         "--prune",
         action="store_true",
         help=f"Prune dangling Docker images labeled {PRUNE_LABEL!r} before running.",
@@ -275,6 +319,7 @@ def main(argv: list[str]) -> int:
     gh_config_value = none_if_disabled(
         resolve_value(args.gh_config, "PI_SANDBOX_GH_CONFIG", config, "gh-config", None)
     )
+    networks = resolve_networks(args.network, config)
 
     pi_home = pi_home_mount_source(pi_home_value)
     context_home = mkdir_abs(context_home_value) if context_home_value is not None else None
@@ -327,6 +372,8 @@ def main(argv: list[str]) -> int:
         "-v",
         f"{pi_home}:{CONTAINER_HOME}/.pi/agent",
     ]
+    for network in networks:
+        command += ["--network", network]
     if gh_config is not None:
         command += [
             "-e",
